@@ -1,5 +1,5 @@
 import { AppRegistry } from 'react-native';
 import App from './App';
 import Navigation from './src/navigation';
-//Test
+//Test again
 AppRegistry.registerComponent('Vote', () => Navigation);
