@@ -1,13 +1,17 @@
 import React, { PureComponent } from 'react'
-import { StyleSheet, Alert, View, ScrollView, Text, TextInput, Image, Modal, StatusBar, Dimensions, TouchableOpacity } from 'react-native'
+import { StyleSheet, Alert, View, ScrollView, Text, TextInput, Image, Modal, StatusBar, Dimensions, TouchableOpacity ,TouchableWithoutFeedback} from 'react-native'
 import Setting from '../config/setting';
 import BaseServiceApiNet from '../utils/baseServiceApiNet';
+const { width } = Dimensions.get('window');
+const defaultWidth = width - 90 * 2
 export default class Publish extends PureComponent {
   constructor(props) {
     super(props)
     this.state = { 
       title: '', 
-      content:''
+      content:'',
+      visible:false,
+      key:'1',
     }
   }
 
@@ -38,6 +42,10 @@ export default class Publish extends PureComponent {
   componentDidMount() {
     this.props.navigation.setParams({navigatePress:this.publicButton,navigation:this.props.navigation,that:this})
   }
+  _onSelect = (tab) => {
+    // this.props.setTab(tab)
+    this.setState({ visible: false,key: tab })
+  }
   publicButton(){
     const{navigate} = this.navigation; 
     if(Setting.isDummy){
@@ -66,30 +74,63 @@ export default class Publish extends PureComponent {
   }
 
   render() {
-
-    const { height } = Dimensions.get('window');
+    const { loading } = this.props
+    const { key } = this.state
+    const { params } = this.props.navigation.state
+    const { navigate } = this.props.navigation
+    const { height } = Dimensions.get('window')
     const textareaHeight = height - 64 - 74 - 35 - 260
+    const tabs = [{ key: '1', value: '单选' }, { key: '2', value: '多选' }]
+    const tabDefault = { '1': '单选', 'share': '分享', '2': '多选' }
     return (
       <ScrollView style={styles.container}>
         <StatusBar barStyle="light-content" />
         <View style={styles.titleView}>
-          <TextInput style={styles.input}
-            value={this.state.title}
-            placeholder='输入标题'
+            <TextInput style={styles.input}
+              value={this.state.title}
+              placeholder='输入标题'
+              underlineColorAndroid="transparent"
+              onChangeText={(title) => { this.setState({title:title}) }}
+            />
+            <TouchableOpacity onPress={() => { this.setState({ visible: true }) }}>
+              <View style={styles.tabView}>
+                <Text>{tabDefault[key]}</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+            <Modal
+            animationType={"fade"}
+            transparent={true}
+            visible={this.state.visible}
+            onRequestClose={() => null}     //修复安卓modal的告警
+          >
+            <TouchableWithoutFeedback onPress={() => { this.setState({ visible: false }) }}>
+              <View style={styles.modalContainer}>
+                <View style={styles.modal}>
+                  {
+                    tabs.map((tab, index) => (
+                      <TouchableOpacity key={index} onPress={() => { this._onSelect(tab.key) }}>
+                        <View style={styles.rowView}>
+                          <Text style={styles.rowText}>{tab.value}</Text>
+                        </View>
+                        {index != tabs.length - 1 ? <View style={styles.rowLine}></View> : null}
+                      </TouchableOpacity>
+                    ))
+                  }
+                </View>
+              </View>
+            </TouchableWithoutFeedback>
+          </Modal>
+          <View style={styles.content}>
+          <TextInput style={styles.textarea}
+            value={this.state.content}
+            multiline={true}
+            minHeight={textareaHeight}
+            placeholder='输入正文（至少12个字符）'
             underlineColorAndroid="transparent"
-            onChangeText={(title) => { this.setState({title:title}) }}
+            onChangeText={(title) => { this.setState({content:title}) }}
           />
         </View>
-        <View style={styles.content}>
-        <TextInput style={styles.textarea}
-          value={this.state.content}
-          multiline={true}
-          minHeight={textareaHeight}
-          placeholder='输入正文（至少12个字符）'
-          underlineColorAndroid="transparent"
-          onChangeText={(content) => { this.setState({content:content}) }}
-        />
-      </View>
       </ScrollView >
       
     )
@@ -165,5 +206,29 @@ const styles = StyleSheet.create({
     height: 30,
     marginRight: 10
   },
+  modalContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modal: {
+    width: defaultWidth,
+    borderRadius: 5,
+    backgroundColor: '#FFF',
+    justifyContent: 'center',
+  },
+  rowView: {
+    padding: 16,
+  },
+
+  rowLine: {
+    height: 1,
+    backgroundColor: '#F0F0F0',
+  },
+
+  rowText: {
+    textAlign: 'center',
+  }
 })
 
