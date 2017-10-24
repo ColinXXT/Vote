@@ -23,12 +23,12 @@ const Tabs = TabNavigator({
   });
 
 const Navigation = StackNavigator({
-  Tabs: { screen: Tabs },
+  Login: { screen: Login },
   Home: { screen: Home },
   Publish : {screen : Publish},
   Details :{screen : Details}
 }, {
-    initialRouteName: 'Tabs',
+    initialRouteName: 'Login',
     navigationOptions: {
       headerStyle: {
         backgroundColor: '#2D2D2D',

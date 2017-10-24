@@ -69,7 +69,7 @@ export default class Home extends PureComponent {
     };
     LogoffButton(){
       const{navigate} = this.navigation; 
-        AlertIOS.alert('提示', '确定退出？', [
+        Alert.alert('', '确定退出？', [
             {
               text: '取消',
               onPress: function() {
@@ -106,7 +106,7 @@ export default class Home extends PureComponent {
               }
             })
         } catch(e) {
-          alert(e);
+            console.log('error ${e}');
           }    
     }
   

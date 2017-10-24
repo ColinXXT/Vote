@@ -1,13 +1,15 @@
 import React, { PureComponent } from 'react';
-import { StyleSheet, View, Text, ActivityIndicator, TextInput, Button, Image, StatusBar, FlatList, Dimensions, TouchableOpacity,Alert } from 'react-native'
+import { StyleSheet, ScrollView, View, Text, ActivityIndicator, TextInput, Button, Image, StatusBar, FlatList, Dimensions, TouchableOpacity,Alert } from 'react-native'
 import BaseServiceApiNet from '../utils/baseServiceApiNet';
 import Setting from '../config/setting';
+import responseMessage from '../utils/responseHandle';
 export default class Login extends PureComponent {
   constructor(props) {
     super(props)
     this.state = { 
       text: '' ,
       isLoading:false, 
+      responseMessage:''
     }
   }
 
@@ -33,29 +35,36 @@ export default class Login extends PureComponent {
     this.setState({
       isLoading:true
     });
-    try {
-        BaseServiceApiNet.getUserInfo()
+    if((!!userName.trim())&& (!!password.trim())){
+      try {
+        let formData = new FormData();
+        formData.append("staffId",userName);
+        formData.append("password",password);
+        BaseServiceApiNet.getUserInfo(formData)
         .then((response) => {
            this.setState({
              isLoading:false
            });
-           if(Object.is(response.userName, userName) && Object.is(response.password, password)){
-            navigate('Home');
-          }else{
-            Alert.alert("错误提示","请输入有效的工号或者密码",[{text:"重新输入"}]);
-          }
-        })
-    } catch(e) {
-      alert(e);
+           console.info(response);
+           responseMessage.getRspStatus(response,"Home",navigate)})
+      } catch(e) {
+        console.log('error ${e}');
+        this.setState({
+          isLoading:false
+        });
+      }
+    }else{
       this.setState({
-         isLoading:false
+        isLoading:false
       });
+      Alert.alert("错误提示","帐号或者密码不能为空",[{text:"重新输入"}]);              
     }
   }
 
   render() {
     const { loading, navigation } = this.props
     return (
+      <ScrollView ref='scroll' keyboardShouldPersistTaps={true} > 
       <View style={styles.container}>
         <StatusBar barStyle="light-content" />
         <View style={styles.logoView}>
@@ -66,6 +75,7 @@ export default class Login extends PureComponent {
           <TextInput style={styles.input}
             value={this.state.username}
             placeholder='员工工号'
+            maxLength={13}
             underlineColorAndroid="transparent"
             onChangeText={(username) => { this.setState({ username }) }}
           />
@@ -75,6 +85,8 @@ export default class Login extends PureComponent {
           <TextInput style={styles.input}
             value={this.state.password}
             placeholder='输入密码'
+            secureTextEntry={true}
+            maxLength={13}
             underlineColorAndroid="transparent"
             onChangeText={(password) => { this.setState({ password }) }}
           />
@@ -84,6 +96,7 @@ export default class Login extends PureComponent {
           <Text style={styles.login}>登录</Text>
         </TouchableOpacity>
       </View>
+      </ScrollView>
     );
   }
 }

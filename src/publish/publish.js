@@ -56,22 +56,40 @@ export default class Publish extends PureComponent {
     }
     return;
   }
-    try {
-      let formData = new FormData();
-      formData.append("title",this.state.title);
-      formData.append("content",this.state.content);
-      BaseServiceApiNet.sentPublicVote(formData)
-      .then((response) => {
-        if(Object.is(this.that.state.title) && Object.is(this.that.state.content)){
-          {navigate('Home')}
-        }else{
-          Alert.alert("错误提示","提交数据不能为空");
-        }
-      })
-  } catch(e) {
-    alert(e);
-    }
+  if(Object.is(this.that.state.title) && Object.is(this.that.state.content)){
+      try {
+        let formData = new FormData();
+        formData.append("title",this.state.title);
+        formData.append("content",this.state.content);
+          BaseServiceApiNet.sentPublicVote(formData)
+          .then((response) => {
+            console.info(response);
+            switch (response.status) {
+             case "200":
+               this.setState({
+                 responseMessage:{
+                   
+                 }
+               });
+               navigate('Home',responseMessage={responseMessage});
+               break;
+            case "500":
+               switch(response.body.errorCode){
+                 case "U_0100_001":
+                 Alert.alert("错误提示","",[{text:"重新提交"}]);
+               }
+                 break;
+             default:
+               Alert.alert("错误提示","发送失败",[{text:"重新提交"}]);
+           }
+          })
+    } catch(e) {
+      console.log('error ${e}');
+      }  
+  }else{
+    Alert.alert("错误提示","提交数据不能为空");
   }
+}
 
   render() {
     const { loading } = this.props
@@ -83,7 +101,7 @@ export default class Publish extends PureComponent {
     const tabs = [{ key: '1', value: '单选' }, { key: '2', value: '多选' }]
     const tabDefault = { '1': '单选', 'share': '分享', '2': '多选' }
     return (
-      <ScrollView style={styles.container}>
+      <ScrollView style={styles.container} keyboardShouldPersistTaps={true}>
         <StatusBar barStyle="light-content" />
         <View style={styles.titleView}>
             <TextInput style={styles.input}

@@ -7,14 +7,15 @@ function fetchAction(...props) {
   .then((response) => response.json())
 }
 export default {
-  getUserInfo() {
+  getUserInfo(formData) {
     var apiPort = "userInfo.json";
     return fetchAction(`${baseURL}/${apiPort}`, {
-      method: 'GET',
+      method: 'POST',
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json'
       },
+     body: JSON.stringify(formData)
     });
   },
   sentPublicVote(formData) {
@@ -24,9 +25,9 @@ export default {
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
-        'Token':''
+        'Authorization': '需要认证数据',
       },
-      body:formData
+      body: JSON.stringify(formData)
     });
   },
   getVoteList() {
@@ -36,7 +37,7 @@ export default {
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
-        'Token':''
+        'Authorization': '需要认证数据',
       }
     });
   },
@@ -47,9 +48,9 @@ export default {
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
-        'Token':''
+        'Authorization': '需要认证数据',
       },
-      body:formData
+      body: JSON.stringify(formData)
     });
   },
 };
