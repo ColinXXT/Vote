@@ -46,7 +46,19 @@ export default class Login extends PureComponent {
              isLoading:false
            });
            console.info(response);
-           responseMessage.getRspStatus(response,"Home",navigate)})
+           if(Object.is('success',responseMessage.getRspStatus(response))){
+              this.setState({
+                responseMessage:{
+                  _token:response._token,
+                  staffType:response.staffType,
+                  openId:response.openId
+                }    
+              })
+              navigate('Home');
+            }else{
+              Alert.alert("错误提示",responseMessage.getRspStatus(response),[{text:"重新输入"}]); 
+            }
+          })
       } catch(e) {
         console.log('error ${e}');
         this.setState({
