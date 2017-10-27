@@ -32,27 +32,6 @@ export default class Home extends PureComponent {
             submitDate: '2017/10/11'
         }
     ]
-    _newData = [{
-        id: '0',
-        title: '请选择你最爱吃的水果',
-        totalperson: '100',
-        submitPerson: '2',
-        submitDate: '2017/10/10'
-    },
-    {
-        id: '1',
-        title: '关于调查问卷食品安全',
-        totalperson: '100',
-        submitPerson: '29',
-        submitDate: '2017/10/11'
-    },
-    {
-        id: '3',
-        title: '关于最喜爱歌手',
-        totalperson: '100',
-        submitPerson: '29',
-        submitDate: '2017/10/20'
-    }];
     static navigationOptions = ({ navigation }) => {
         const { state, setParams, navigate } = navigation;
         return {
@@ -84,6 +63,7 @@ export default class Home extends PureComponent {
             },
           ])
     }  
+
     componentDidMount() {
         this.props.navigation.setParams({navigatePress:this.LogoffButton,navigation:this.props.navigation})
         const{navigate} = this.props.navigation; 
@@ -94,29 +74,31 @@ export default class Home extends PureComponent {
             })
              return;
           }
-        try {
-            BaseServiceApiNet.sentPublicVote()
-            .then((response) => {
-              if(Object.is(null, response.sourceData)){
-                this.setState({
-                    data:this._sourceData
-                })
-              }else{
-                //
-              }
+    try{
+          BaseServiceApiNet.getVoteList().then((response) => {
+            this.setState({
+                refreshing:true
             })
-        } catch(e) {
-            console.log('error ${e}');
-          }    
+            if(response.hasOwnProperty('success')){
+                setTimeout(() => {
+                    this.setState((state) => ({
+                        data: response.success,
+                        refreshing:false
+                    }));
+                }, 3000)
+              }else{
+                this.setState({
+                    refreshing:false
+                });  
+                Alert.alert("错误提示",response.error,[{text:"重新输入"}]); 
+              }
+        })}catch(e){
+        console.info(e);
     }
-  
+}
+
     _onEndReached = () => {
         //请求新数据
-        setTimeout(() => {
-            this.setState((state) => ({
-                data: this._newData
-            }));
-        }, 3000)
     }
     _footer = () => (
         <Text style={{fontSize: 14, alignSelf: 'center',marginTop:10, color:"grey"}}>{this.state.loadNew}</Text>

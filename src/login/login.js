@@ -2,7 +2,9 @@ import React, { PureComponent } from 'react';
 import { StyleSheet, ScrollView, View, Text, ActivityIndicator, TextInput, Button, Image, StatusBar, FlatList, Dimensions, TouchableOpacity,Alert } from 'react-native'
 import BaseServiceApiNet from '../utils/baseServiceApiNet';
 import Setting from '../config/setting';
-import responseMessage from '../utils/responseHandle';
+var forge = require('node-forge');
+
+var call = function(){}.call;
 export default class Login extends PureComponent {
   constructor(props) {
     super(props)
@@ -19,10 +21,8 @@ export default class Login extends PureComponent {
       headerTitle: 'Vote',
       headerLeft: null,
       headerRight: null,
-    };
-
+    }
   };
-
   _onLogin = (userName,password) => {
     const { navigate } = this.props.navigation;
     if(Setting.isDummy){
@@ -32,39 +32,37 @@ export default class Login extends PureComponent {
     if(this.state.isLoading==true){
       return;
     }
-    this.setState({
-      isLoading:true
-    });
-    if((!!userName.trim())&& (!!password.trim())){
-      try {
-        let formData = new FormData();
-        formData.append("staffId",userName);
-        formData.append("password",password);
-        BaseServiceApiNet.getUserInfo(formData)
-        .then((response) => {
+    if((!!userName)&& (!!password)){
+        var md = forge.md.md5.create();
+        md.update(password);
+        this.setState({
+          isLoading:true
+        });
+    try{
+        BaseServiceApiNet.getUserInfo({
+          staffId : userName,
+          password : md.digest().toHex().toUpperCase()
+        }).then((response) => {
            this.setState({
              isLoading:false
            });
-           console.info(response);
-           if(Object.is('success',responseMessage.getRspStatus(response))){
+           if(response.hasOwnProperty('success')){
               this.setState({
                 responseMessage:{
-                  _token:response._token,
-                  staffType:response.staffType,
-                  openId:response.openId
+                  _token:response.success._token,
+                  staffType:response.success.staffType,
+                  openId:response.success.openId
                 }    
               })
+              console.info(this.state.responseMessage);
               navigate('Home');
             }else{
-              Alert.alert("错误提示",responseMessage.getRspStatus(response),[{text:"重新输入"}]); 
+              Alert.alert("错误提示",response.error,[{text:"重新输入"}]); 
             }
           })
-      } catch(e) {
-        console.log('error ${e}');
-        this.setState({
-          isLoading:false
-        });
-      }
+        }catch(e){
+          console.info(e);
+        }
     }else{
       this.setState({
         isLoading:false
@@ -72,11 +70,10 @@ export default class Login extends PureComponent {
       Alert.alert("错误提示","帐号或者密码不能为空",[{text:"重新输入"}]);              
     }
   }
-
   render() {
     const { loading, navigation } = this.props
     return (
-      <ScrollView ref='scroll' keyboardShouldPersistTaps={true} > 
+      <ScrollView ref='scroll'> 
       <View style={styles.container}>
         <StatusBar barStyle="light-content" />
         <View style={styles.logoView}>

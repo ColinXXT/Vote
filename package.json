@@ -4,9 +4,11 @@
 	"private": true,
 	"scripts": {
 		"start": "node node_modules/react-native/local-cli/cli.js start",
-		"test": "jest"
+		"test": "jest",
+		"bundle-ios": "node node_modules/react-native/local-cli/cli.js bundle --entry-file index.js  --platform ios --dev false --bundle-output ./ios/bundle/index.jsbundle --assets-dest ./ios/bundle"
 	},
 	"dependencies": {
+		"node-forge": "^0.7.1",
 		"react": "16.0.0-beta.5",
 		"react-native": "0.49.3",
 		"react-native-html-render": "^1.0.5",

@@ -1,5 +1,5 @@
 //Enable/Disable call API
 let Setting = {
-    isDummy: true
+    isDummy: false
 }
 export default Setting;
