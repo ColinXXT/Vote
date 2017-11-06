@@ -1,30 +1,36 @@
 import React, { PureComponent } from 'react';
-import { StyleSheet, View, Text, TextInput, RefreshControl, Button, Image, StatusBar, FlatList, Dimensions, ScrollView, TouchableOpacity } from 'react-native'
+import { StyleSheet, Alert, View, Text, ActivityIndicator, TextInput, RefreshControl, Button, Image, StatusBar, FlatList, Dimensions, ScrollView, TouchableOpacity } from 'react-native'
 import RadioModal from 'react-native-radio-master';
 import Setting from '../config/setting';
 import BaseServiceApiNet from '../utils/baseServiceApiNet';
+import CheckBox from 'react-native-check-box';
 
 const { width } = Dimensions.get('window')
 const defaultMaxImageWidth = width - 30 - 20
 const defaultInputWidth = width - 40
+const arrayObj = new Array();
 
 export default class Details extends PureComponent {
   constructor(props) {
     super(props)
     this.state = {
-        language:'',
-        item:'',
-        initItem:'',
         initId:'',
-        datas:''
-    }
+				datas:'',
+				type:'',
+				description:'',
+				isModified:false,
+				isLoading:false,
+				subDescription:'',
+				sendMsg:'',
+				isChecked:false
+		}
   }
 
   static navigationOptions = ({ navigation }) => {
     const { state, setParams,navigate } = navigation;
     const { params } = navigation.state;
     return {
-      headerTitle: '话题',
+      headerTitle: params.title,
       headerRight: (
         <View style={styles.headerRight}>
         <TouchableOpacity style={styles.headerTouch} onPress={() => navigation.state.params.navigatePress()}>
@@ -35,353 +41,195 @@ export default class Details extends PureComponent {
     };
   };
 	componentDidMount() {
-    this.props.navigation.setParams({navigatePress:this.submitVote,navigation:this.props.navigation,that:this})
-  }
+		this.props.navigation.setParams({navigatePress:this.submitVote,navigation:this.props.navigation})
+	
+	}
+
   componentWillMount() {
-    //请求details数据
-    const datas= [
-        {
-          "selecteId": 13,
-          "content": "苹果",
-          "selected": false
-        },
-        {
-          "selecteId": 14,
-          "content": "香蕉",
-          "selected": false
-        },
-        {
-          "selecteId": 15,
-          "content": "橘子",
-          "selected": false
-        },
-        {
-          "selecteId": 16,
-          "content": "甜瓜",
-          "selected": true
-        }
-      ]	  
-      this.setState({
-          datas:datas,
-          language:datas[0].selecteId,
-          item:datas[0].content,
-          initItem:'选项a',
-          initId:'0',
-      })
-  
+		//请求details数据
+		const {state,navigate} = this.props.navigation;
+		arrayObj = new Array();
+		try{
+			BaseServiceApiNet.getVoteListDetails(state.params.topic_id).then((response) => {
+				this.setState({
+					isLoading:true
+				})
+				console.info(response)
+				if(response.hasOwnProperty('success')){
+						setTimeout(() => {
+								this.setState((state) => ({
+										datas:response.success.items,
+										type:response.success.type,
+										description:response.success.description,
+										subDescription:response.success.items,
+										isLoading:false
+								}));
+						}, 3000)
+					}else{
+						this.setState({
+							isLoading:false
+						});  
+						Alert.alert("错误提示",response.error,[{text:"重新输入"}]); 
+					}
+		})}catch(e){
+		console.info(e);
+		}
 	}
 	submitVote(){
-    const{navigate} = this.navigation; 
-    if(Setting.isDummy){
-         navigate('Home');
-				return;
-			}
+	 const{navigate,state} = this.navigation; 
+	 Array.prototype.remDub = Array.prototype.remDub || function () {
+		return [...new Set(this)];
+		};
     try {
-      let formData = new FormData();
-      formData.append("voteId",this.state.language);
-      formData.append("content",this.state.item);
-      BaseServiceApiNet.sentPublicVote(formData)
+      BaseServiceApiNet.sentPublicVote({
+				voteId:this.topic_id,
+				actionId : "VOTE",
+				items : arrayObj.remDub()
+			})
       .then((response) => {
-        if(true){
-          navigate('Home');
+        if(response.hasOwnProperty("success")){
+					setTimeout(() => {
+					Alert.alert('', '投票成功', [
+            {
+              text: '点击返回',
+              onPress: function() {
+                navigate("Home",{staffType:"0"})
+              }
+            },
+          ])},1000)
         }else{
-      //
+					setTimeout(() => {
+						Alert.alert("",response.error,[{text:"投票失败"}]); 
+				}, 1000)
         }
       })
   } catch(e) {
     alert(e);
     }
-  }
+	}
+	//check box start
+	renderViews = () => {
+		if (!this.state.datas || this.state.datas.length === 0)return;
+		let len = this.state.datas.length;
+		var views = [];  //要绘制的所有多选框，装入views数组
+		for (let i = 0, j = len - 2; i < j; i += 2) {
+				views.push((
+						<View key={`view_${i}`} style={{flexDirection: 'row'}}>
+								{this.renderCheckBox(this.state.datas[i])}
+								{this.renderCheckBox(this.state.datas[i + 1])}
+						</View>
+				));
+		}
 
+        //偶数个，剩下最后两个多选框
+        //奇数个，剩下最后一个多选框
+        views.push(
+					<View key={`view_${len - 1}`} style={{flexDirection: 'row'}}>
+							{len % 2 === 0 ? this.renderCheckBox(this.state.datas[len - 2]) :
+									<View style={{flex: 1, padding: 10}}></View>}
+							{this.renderCheckBox(this.state.datas[len - 1])}
+					</View>
+			);
+
+			return views;
+	}
+	handleClick = (item) => {
+		item.checked = !item.checked;
+		if(item.checked){
+			arrayObj.push(item._id);
+		}else{
+			console.info(item)
+			arrayObj = arrayObj.filter(function(e,index){
+				console.log(e==item._id)
+				return item._id!=e;
+			});
+		}
+}
+
+//渲染CheckBox  这里item就是一个对象
+renderCheckBox = (item) => {
+		console.log(item);
+
+		// console.log(item.name + ',' + item.checked);
+		var leftText = item.description;
+		return <CheckBox
+				style={{flex: 1, padding: 10}}
+				onClick={() => this.handleClick(item)}
+				leftText={leftText}
+				isChecked = {(item.checked)}
+				unCheckedImage={<Image source={require('../../res/images/ic_check_box_outline_blank.png')}
+															 style={styles.checkbox}/>}
+				checkedImage={<Image source={require('../../res/images/ic_check_box.png')} style={styles.checkbox}/>}
+		/>
+}
+//check box end
   render() {
-		const {topic_id } = this.props.navigation.state.params;
+		const { loading } = this.props
     return (     
-        <View style={{padding:20,flex:1,flexDirection:'column'}}>
-				    <Text style={{backgroundColor:'#ffffff',color:'#414141',padding:5,}}>
-				     你选择的是:<Text style={{color:'#ff0000'}}>{this.state.item}</Text>	 
-				    </Text>	 
-				    <Text style={{backgroundColor:'#ffffff',color:'#414141',padding:5,}}>	 
-            选中的水果的标识为：<Text style={{color:'#ff0000'}}>{this.state.language}</Text>
-				    </Text>
-				    <RadioModal
-					  options={{id:'selecteId',value:'content',disabled:'selected'}}
-						innerStyle={{width:(width-80)/2}}
-						txtColor={'#000000'}
-						noneColor={'#efefef'}
-						selectedValue={this.state.language}
-						onValueChange={(id,item) => this.setState({language: id,item:item})}
-						seledImg={require('../assets/images/selected.png')}
-						selImg={require('../assets/images/select.png')}
-						selnoneImg={require('../assets/images/selectnone.png')}
-						dataOption={this.state.datas}
-						style={{ flexDirection:'row',
-							  flexWrap:'wrap',
-							  alignItems:'flex-start',
-							  flex:1,
-							  backgroundColor:'#ffffff',padding:5,marginTop:10
-							  }} 
+        <View style={styles.container}>
+						<ActivityIndicator  animating={this.state.isLoading}  /> 			 
+            <Text>{this.state.description}</Text>
+						 {this.state.type=='0'?
+							<RadioModal
+								options={{id:'_id',value:'description'}}
+								innerStyle={{width:(width-80)/2}}
+								txtColor={'#000000'}
+								noneColor={'#efefef'}
+								onValueChange={(id,item) => {arrayObj.push(id)}}
+								seledImg={require('../assets/images/selected.png')}
+								selImg={require('../assets/images/select.png')}
+								selnoneImg={require('../assets/images/selectnone.png')}
+								dataOption={this.state.datas}
+								style={{flexDirection:'row',
+								flexWrap:'wrap',
+								alignItems:'flex-start',
+								flex:1,
+								backgroundColor:'#ffffff',
+								padding:5,
+								marginTop:10}} 
 				      />
+						 :	 
+							<View style={Object.is('',this.state.datas)?null:{flexDirection:'row',
+								flexWrap:'wrap',
+								alignItems:'flex-start',
+								flex:1,
+								backgroundColor:'#ffffff',
+								padding:5,
+								marginTop:10}}>
+								{Object.is('',this.state.datas)?null:this.renderViews()}
+							</View>
+						 }
 				</View>
     );
-  }
+	}
+	
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        paddingBottom: 44,
-        backgroundColor: '#FFFFFF',
-      },
-    
-      scrollView: {
-        flex: 1,
-        backgroundColor: '#FFFFFF',
-      },
-    
-      headerLeft: {
-        width: 80,
-        marginLeft: 15
-      },
-    
-      connect: {
-        padding: 15,
-        borderBottomWidth: 1,
-        borderColor: '#F0F0F0',
-      },
-    
-      reply: {
-        flexDirection: 'row',
-        padding: 15,
-        borderBottomWidth: 1,
-        borderColor: '#F0F0F0',
-      },
-    
-      total: {
-        color: '#42b983',
-        fontWeight: 'bold',
-      },
-    
-      inputView: {
-        position: 'absolute',
-        bottom: 0,
-      },
-    
-      contentTouch: {
-        padding: 10,
-        alignItems: 'center',
-        justifyContent: 'center',
-      },
-    
-      contentImg: {
-        width: 24,
-        height: 24,
-      },
-    
-      contentView: {
-        height: 44,
-        flexDirection: 'row',
-        justifyContent: 'center',
-        backgroundColor: '#F8F8F8',
-      },
-    
-      input: {
-        width: defaultInputWidth,
-        fontSize: 16,
-        paddingLeft: 15,
-        paddingRight: 15,
-      },
-    
-      commentTouch: {
-        height: 30,
-      },
-      titleCom:{
-		marginBottom:5,
-	},
-	seltedImgs:{
-		width:14,
-		height:14,
-		marginRight:8,
-	},
-	emailH:{
-	 height:28,
-	 textAlignVertical:'center',
-	 marginRight:10,
-	 color:'#141414',
-	 fontSize:12,
-	},
-	inputs:{
-		width:width*0.5,
-		borderWidth:1,
-		borderColor:'#dfdfdf',
-		borderRadius:3,
-		height:28,
-		padding:0,
-		paddingLeft:5,
-		paddingRight:5,
-		marginBottom:10,
-		fontSize:12,
-	},
-	closeBtns:{
-		position:'absolute',
-		width:14,
-		height:14,
-		right:10,
-		top:7,
-	},
-	headLog:{
-	  backgroundColor:'#e6454a',
-	  color:'#ffffff',
-	  height:28,
-	  textAlignVertical:'center',
-	  textAlign:'center'
-	},
-	border1:{
-		borderWidth:1,
-		borderColor:'#dfdfdf',
-	},
-	borderR:{
-		borderRightWidth:1,
-		borderRightColor:'#dfdfdf',
-	},
-	borderL:{
-		borderLeftWidth:1,
-		borderLeftColor:'#dfdfdf',
-	},
-	eleMess:{
-		paddingLeft:10,
-		paddingRight:10,
-		height:24,
-		fontSize:12,
-		color:'#ffffff',
-		backgroundColor:'#f8cb43',
-		borderRadius:3,
-		textAlignVertical:'center',
-		textAlign:'center',
-		width:80,
-	},
-	electronicTip:{
-		width:(width-40)/5,
-		flexDirection:'row',
-		justifyContent:'center',
-		paddingTop:10,
-		paddingBottom:10,
-	},
-	lineRow:{
-		backgroundColor:'#ffffff',
-		borderRadius:3,
-		flexDirection:'row',
+	container:{
+		padding:20,
 		flex:1,
-		marginBottom:15,
-		padding:10,
-		alignItems:'center',
-		justifyContent:'space-between',
-		flexWrap:'wrap',
-		alignItems: 'flex-start',
-		
-	},
-	lineRowB:{
-		backgroundColor:'#ffffff',
-		borderRadius:3,
-		flexDirection:'row',
-		flex:1,
-		marginBottom:15,
-		paddingLeft:10,
-		paddingRight:10,
-		alignItems:'center',
-	},
-	inner3:{
-		width:(width-40)/3,
-		fontSize:12,
-		color:'#141414'
-	},
-	innerS:{
-		flexDirection:'row',
-        flex:1,
-		fontSize:12,
-		color:'#141414'
-	},
-	flex1:{
-		flex:1
-	},
-	flexRow:{
-
-	   flexDirection:'row',
-	 },
-	flexVer:{
 		flexDirection:'column',
+	//	backgroundColor: '#F8F8F8',
 	},
-	Jcenter:{
-		justifyContent:'center',
-	},
-	Acenter:{
-		alignItems:'center',
-	},
-	BE:{
-		justifyContent:'space-between'
-	},
-	Textcenter:{
-		textAlign:'center',
-	},
-	TextCenterVer:{
-		textAlignVertical:'center',
-	},
-	backCGray:{
-	  backgroundColor:'#dfdfdf'
-    },
-	backWhite:{
-		backgroundColor:'#ffffff',
-	},
-	borderRadius5:{
-		borderRadius:5,
-	},
-	borderRadius3:{
-		borderRadius:3,
-	},
-	horLine:{
-		flexDirection:'row',
-		flex:1,		
-		flexWrap:'wrap',
-		alignItems: 'flex-start',
-		marginBottom:10,
+	checkbox: {
+				tintColor: '#63B8FF'
 		},
-	paddlr10:{
-	   paddingLeft:10,
-	   paddingRight:10,
-    },
-	marginB10:{
-		marginBottom:10,
-	},
-	colorRed:{
-	   color:'#b40e12',
-	},
-	colorBlack:{
-	   color:'#141414',
-	},
-	colorYellow:{
-	   color:'#f8cb43', 
-	},
-	color999:{
-	   color:'#999999',
-	},
-	colorWhite:{
-	   color:'#ffffff',
-    },	
-    headerRight: {
-        flex: 1,
-        flexDirection: 'row',
-        alignItems: 'center'
-      },
-    
-      headerTouch: {
-        height: 30
-      },
-    
-      headerBtn: {
-        flex: 1,
-        width: 30,
-        height: 30,
-        marginRight: 10
-      },
+	checkboxView:{flex: 1, padding: 10},	
+	headerRight: {
+			flex: 1,
+			flexDirection: 'row',
+			alignItems: 'center'
+		},
+		headerTouch: {
+			height: 30
+		},
+		headerBtn: {
+			flex: 1,
+			width: 30,
+			height: 30,
+			marginRight: 10
+		}		
 });
 
 

@@ -1,6 +1,7 @@
 import errorMapping from '../config/errorMapping';
 const baseUserURL = "http://localhost:3000";
 const baseVoteURL = "http://localhost:3001";
+const _token = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJvcGVuSWQiOiI0ZGI1Y2ExNS0xZWM4LTQ1ZGEtYjhjMi0wYTY4NGM5NzI1NjciLCJzdGFmZklkIjoidXNlciIsImlhdCI6MTUwOTUyNDAwNn0.7jxFXDqY0wCXgvrLREn928AIQgqrmEG0G_HadbZVq1s";
 
 function checkRequestStatus(response){
   //监听请求延迟
@@ -10,6 +11,8 @@ function checkResponsStatus(response){
   console.info(response)
   if(response.hasOwnProperty('errorCode')){
     return {'error':errorMapping.getMsgAsRepsCode(response.errorCode)}
+  }else if(response.hasOwnProperty('errorMsg')){
+    return {'error':response.errorMsg};
   }else if(response.hasOwnProperty('_token')){
     _token = response._token;
     return {'success':response};
@@ -35,19 +38,20 @@ export default {
     return fetchAction(`${baseUserURL}/${apiPort}`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Authorization':_token
       },
      body: JSON.stringify(formData)
     });
   },
   sentPublicVote(formData) {
-    var apiPort = "publicVote.json";
+    var apiPort = `votes/${formData.voteId}`;
     return fetchAction(`${baseVoteURL}/${apiPort}`, {
-      method: 'Post',
+      method: 'PUT',
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
-        'Authorization': _token,
+        'Authorization':_token
       },
       body: JSON.stringify(formData)
     });
@@ -59,19 +63,30 @@ export default {
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
-        'Authorization': _token,
+        'Authorization':_token
       }
     });
   },
-  
-  submitVote(formData) {
-    var apiPort = "submitVote.json";
+  getVoteListDetails(voteId) {
+    //populate=items&voter=true
+    var apiPort = `votes/${voteId}`;
     return fetchAction(`${baseVoteURL}/${apiPort}`, {
-      method: 'Post',
+      method: 'GET',
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
-        'Authorization': _token,
+        'Authorization':_token
+      }
+    });
+  },
+  submitVote(formData) {
+    var apiPort = `votes/${formData.voteId}`;
+    return fetchAction(`${baseVoteURL}/${apiPort}`, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'Authorization':_token
       },
       body: JSON.stringify(formData)
     });

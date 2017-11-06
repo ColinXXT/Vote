@@ -1,5 +1,5 @@
 import React, { PureComponent } from 'react';
-import Wrap from './components/Wrap';
+import Wrap from './components/wrap';
 import { StyleSheet, AlertIOS, View, Text, Button, Image, StatusBar, FlatList, Dimensions, TouchableOpacity, Alert } from 'react-native'
 import Setting from '../config/setting';
 import BaseServiceApiNet from '../utils/baseServiceApiNet';
@@ -9,29 +9,11 @@ export default class Home extends PureComponent {
         super(props)
         this.state = {
             refreshing: false, //初始化不刷新
-            data: "",
-            text: "",//跳转的行 ,
             loadNew:"下拉刷新",
-            _newData:""
+            _newData:"",
+            staffType:'0'
         }
     }
- 
-    _sourceData = [
-        {
-            id: '0',
-            title: '请选择你最爱吃的水果',
-            totalperson: '100',
-            submitPerson: '2',
-            submitDate: '2017/10/10'
-        },
-        {
-            id: '1',
-            title: '关于调查问卷食品安全',
-            totalperson: '100',
-            submitPerson: '29',
-            submitDate: '2017/10/11'
-        }
-    ]
     static navigationOptions = ({ navigation }) => {
         const { state, setParams, navigate } = navigation;
         return {
@@ -67,13 +49,6 @@ export default class Home extends PureComponent {
     componentDidMount() {
         this.props.navigation.setParams({navigatePress:this.LogoffButton,navigation:this.props.navigation})
         const{navigate} = this.props.navigation; 
-            if(Setting.isDummy){
-                this.setState({
-                data:this._sourceData,
-                _newData:this._newData
-            })
-             return;
-          }
     try{
           BaseServiceApiNet.getVoteList().then((response) => {
             this.setState({
@@ -90,7 +65,7 @@ export default class Home extends PureComponent {
                 this.setState({
                     refreshing:false
                 });  
-                Alert.alert("错误提示",response.error,[{text:"重新输入"}]); 
+                Alert.alert("",response.error,[{text:"信息加载失败，重新登陆"}]);
               }
         })}catch(e){
         console.info(e);
@@ -99,13 +74,36 @@ export default class Home extends PureComponent {
 
     _onEndReached = () => {
         //请求新数据
+        try{
+            BaseServiceApiNet.getVoteList().then((response) => {
+              this.setState({
+                  refreshing:true
+              })
+              if(response.hasOwnProperty('success')){
+                  setTimeout(() => {
+                      this.setState((state) => ({
+                          data: response.success,
+                          refreshing:false
+                      }));
+                  }, 3000)
+                }else{
+                  this.setState({
+                      refreshing:false
+                  });  
+                  Alert.alert("",response.error,[{text:"获取新数据失败！重新登陆"}]); 
+                }
+          })}catch(e){
+          console.info(e);
+      }
     }
     _footer = () => (
         <Text style={{fontSize: 14, alignSelf: 'center',marginTop:10, color:"grey"}}>{this.state.loadNew}</Text>
       )
     render() {
-        const { data, page, tab } = this.props
-        const { navigate } = this.props.navigation;
+        const { navigate,state } = this.props.navigation;
+        this.setState({
+            staffType:state.params.staffType
+        });
         const tabs = [{ key: 'all', value: '全部' }]
         return (
             <View style={styles.container}>
@@ -123,39 +121,19 @@ export default class Home extends PureComponent {
                         this.setState({ refreshing: true })//开始刷新
                         setTimeout(() => {
                             this.setState({ refreshing: false, loadNew:"暂时没有更多新数据"});
-                        }, 5000);
+                        }, 1000);
                     }}
-                    renderItem={({ item }) => <Wrap navigate={navigate} item={item} />}
+                    renderItem={({ item }) => <Wrap navigate={navigate} item={item} staffType={state.params.staffType}/>}
                 />
+                {this.state.staffType=='1'?
                 <TouchableOpacity style={styles.pubilshBox} onPress={() => { navigate('Publish') }}>
                     <Image style={styles.pubilsh} source={require('../assets/images/add.png')} resizeMode='contain' />
-                </TouchableOpacity>
+                </TouchableOpacity>:null
+                }
             </View>
         );
     }
 }
-
-function mapStateToProps(state) {
-    const { tab, page, data, loading } = state.home;
-    return { tab, page, data, loading };
-}
-
-function mapDispatchToProps(dispatch) {
-    return {
-        init() {
-            dispatch({
-                type: 'home/init',
-            });
-        },
-        query(params) {
-            dispatch({
-                type: 'home/query',
-                payload: params,
-            });
-        },
-    }
-}
-
 const styles = StyleSheet.create({
     container: {
         flex: 1,

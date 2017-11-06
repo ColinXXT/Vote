@@ -3,8 +3,6 @@ import { StyleSheet, ScrollView, View, Text, ActivityIndicator, TextInput, Butto
 import BaseServiceApiNet from '../utils/baseServiceApiNet';
 import Setting from '../config/setting';
 var forge = require('node-forge');
-
-var call = function(){}.call;
 export default class Login extends PureComponent {
   constructor(props) {
     super(props)
@@ -25,8 +23,8 @@ export default class Login extends PureComponent {
   };
   _onLogin = (userName,password) => {
     const { navigate } = this.props.navigation;
-    if(Setting.isDummy){
-      navigate('Home');
+    if(true){
+      navigate('Home',{staffType:'0'});
       return;
     }
     if(this.state.isLoading==true){
@@ -54,10 +52,9 @@ export default class Login extends PureComponent {
                   openId:response.success.openId
                 }    
               })
-              console.info(this.state.responseMessage);
-              navigate('Home');
+              navigate('Home',{staffType:response.success.staffType});
             }else{
-              Alert.alert("错误提示",response.error,[{text:"重新输入"}]); 
+              Alert.alert("",response.error,[{text:"信息加载失败，重新登陆"}]);
             }
           })
         }catch(e){
@@ -83,7 +80,7 @@ export default class Login extends PureComponent {
         <View style={styles.inputView}>         
           <TextInput style={styles.input}
             value={this.state.username}
-            placeholder='员工工号'
+            placeholder='员工工号/Admin帐号'
             maxLength={13}
             underlineColorAndroid="transparent"
             onChangeText={(username) => { this.setState({ username }) }}
@@ -173,5 +170,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginLeft: 16,
     marginTop: 16,
-  },
+  }
 });
