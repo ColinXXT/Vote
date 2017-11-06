@@ -1,3 +1,7 @@
+import {
+  AppRegistry,
+  AsyncStorage
+} from 'react-native';
 import errorMapping from '../config/errorMapping';
 const baseUserURL = "http://localhost:3000";
 const baseVoteURL = "http://localhost:3001";
@@ -14,6 +18,21 @@ function checkResponsStatus(response){
   }else if(response.hasOwnProperty('errorMsg')){
     return {'error':response.errorMsg};
   }else if(response.hasOwnProperty('_token')){
+    try {
+      AsyncStorage.setItem(
+          '_token',
+          response._token,
+          (error)=>{
+              if (error){
+                  alert('存值失败:',error);
+              }else{
+                  alert('存值成功!');
+              }
+          }
+      );
+  } catch (error){
+      alert('失败'+error);
+  }
     _token = response._token;
     return {'success':response};
   }else{
