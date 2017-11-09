@@ -166,9 +166,9 @@ renderCheckBox = (item) => {
 				onClick={() => this.handleClick(item)}
 				leftText={leftText}
 				isChecked = {(item.checked)}
-				unCheckedImage={<Image source={require('../../res/images/ic_check_box_outline_blank.png')}
+				unCheckedImage={<Image source={require('../assets/images/ic_check_box_outline_blank.png')}
 															 style={styles.checkbox}/>}
-				checkedImage={<Image source={require('../../res/images/ic_check_box.png')} style={styles.checkbox}/>}
+				checkedImage={<Image source={require('../assets/images/ic_check_box.png')} style={styles.checkbox}/>}
 		/>
 }
 //check box end
