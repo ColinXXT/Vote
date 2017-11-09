@@ -1,29 +1,78 @@
 import React, { Component } from 'react';
 import { StyleSheet, Text, View, Image, TextInput, Modal, Dimensions, TouchableOpacity, FlatList,ScrollView } from 'react-native';
-import List from './list'
+
 export default class AddList extends Component {
     constructor(props) {
         super(props);
             this.state = {
             items: [
-            ]
+            ],
+            content:''
         }
     }
 
     addItem() {
         let items = this.state.items; 
-        let item = {};
-        items = [...items, item];                        
-        this.setState({ items: items });
+        //let id = this.state.itemid+1;
+        let id = this.getId();
+        let item = { id:id,value:""};
+        items = [...items, item];                   
+        this.setState({ items: items});
+    }
+    // 获得子组件的值  
+    setItemValue(content,id) {
+        let items = this.state.items;       
+        items = items.filter(function(e,i){
+            if(e.id==id){
+                e.value = content;
+            }
+            return true;
+        });
+         this.props.getValue(items);
     }
 
+    delItem(index) {
+        let items = this.state.items;
+        items = items.filter(function(e, i){
+            return index!=e.id;
+        })
+         this.setState({ items: items });
+    };
+    
+    getId(){
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            var r = Math.random() * 16 | 0,
+              v = c == 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+          }).toUpperCase();
+      }
+
     render() {
+        const { content } = this.props;
         const { height } = Dimensions.get('window');
         const textareaHeight = height - 64 - 74 - 35 - 260;
         const { items } = this.state;
         return (
             <ScrollView style={styles.container}>
-            {items.map((e,index)=> <List />)}          
+            <FlatList
+                data={items}              
+                renderItem={({ item,index }) =>
+                        <View style={styles.titleView}>                   
+                        <TextInput key= {item.id} style={styles.input}
+                            value={content}
+                            placeholder='输入内容'
+                            underlineColorAndroid="transparent"
+                            onChangeText={(content) => { this.setItemValue(content,item.id) }}
+                            >
+                        </TextInput>
+                        <TouchableOpacity onPress={() => { this.delItem(item.id) }}>
+                            <View style={styles.tabView}>
+                            <Text>Del</Text>
+                            </View>
+                        </TouchableOpacity> 
+                        </View>           
+                }
+            />            
             <TouchableOpacity animating={this.state.isLoading} style={styles.loginBtn} onPress={() => { this.addItem() }}>
                 <Text style={styles.login}>添加选项</Text>
             </TouchableOpacity>

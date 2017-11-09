@@ -20,15 +20,21 @@ export default class Title extends Component {
 //   }
 
   _onSelect = (tab) => {
-    // this.props.setTab(tab)
-    this.setState({ visible: false,key: tab })
+    this.props.getValue(tab);
+    this.setState({ visible: false,key: tab }) 
   }
+
+    // 获得子组件的值  
+  setItemValue(title) {
+       let objData = {title:title,key:this.state.key};
+       this.props.getValue(objData);
+  }  
 
   render() {
     const { tab, title } = this.props
     const { key } = this.state
     const tabs = [{ key: '0', value: '单选' }, { key: '1', value: '多选' }]
-    const tabDefault = { '0': '单选', 'share': '分享', '1': '多选' }
+    const tabDefault = { '0': '单选', '1': '多选' }
 
     return (
       <View style={styles.container}>
@@ -37,7 +43,7 @@ export default class Title extends Component {
             value={title}
             placeholder='输入标题'
             underlineColorAndroid="transparent"
-            onChangeText={(title) => { this.setState({title:title}) }}
+            onChangeText={(title) => { this.setItemValue(title) }}
           />
           <TouchableOpacity onPress={() => { this.setState({ visible: true }) }}>
             <View style={styles.tabView}>

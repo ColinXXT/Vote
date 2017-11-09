@@ -6,10 +6,11 @@ import Publish from './publish/publish';
 import Details from './details/details';
 import AddList from './publish/components/addList';
 import Title from './publish/components/title';
-import List from './publish/components/list';
+
 
 const Tabs = TabNavigator({
   Login: { screen: Login },
+  
 }, {
     tabBarOptions: {
       activeTintColor: '#7a86a2',
@@ -31,7 +32,7 @@ const Navigation = StackNavigator({
   Details :{screen : Details},
   AddList :{screen : AddList},
   Title :{screen : Title},
-  List :{screen : List},
+
 }, {
     initialRouteName: 'Login',
     navigationOptions: {

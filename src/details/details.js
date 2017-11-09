@@ -80,12 +80,15 @@ export default class Details extends PureComponent {
 	 Array.prototype.remDub = Array.prototype.remDub || function () {
 		return [...new Set(this)];
 		};
+		if(Object.is(0,arrayObj.remDub().length)){
+			return	Alert.alert("","请勾选选项进行投票",[{text:"重新选择"}]); 
+		}
     try {
-      BaseServiceApiNet.sentPublicVote({
-				voteId:this.topic_id,
+			var formData = {
 				actionId : "VOTE",
 				items : arrayObj.remDub()
-			})
+			}
+      BaseServiceApiNet.sentPublicVote(this.topic_id,formData)
       .then((response) => {
         if(response.hasOwnProperty("success")){
 					setTimeout(() => {
@@ -146,6 +149,12 @@ export default class Details extends PureComponent {
 		}
 }
 
+handleOnChange = (id) => {
+	var arr=new Array();	
+	arr.push(id);
+	arrayObj=[...arr];
+}
+
 //渲染CheckBox  这里item就是一个对象
 renderCheckBox = (item) => {
 		console.log(item);
@@ -175,7 +184,7 @@ renderCheckBox = (item) => {
 								innerStyle={{width:(width-80)/2}}
 								txtColor={'#000000'}
 								noneColor={'#efefef'}
-								onValueChange={(id,item) => {arrayObj.push(id)}}
+								onValueChange={(id,item) => this.handleOnChange(id)}
 								seledImg={require('../assets/images/selected.png')}
 								selImg={require('../assets/images/select.png')}
 								selnoneImg={require('../assets/images/selectnone.png')}

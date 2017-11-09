@@ -23,8 +23,8 @@ export default class Login extends PureComponent {
   };
   _onLogin = (userName,password) => {
     const { navigate } = this.props.navigation;
-    if(true){
-      navigate('Home',{staffType:'0'});
+    if(false){
+      navigate('Home',{staffType:'1'});
       return;
     }
     if(this.state.isLoading==true){
