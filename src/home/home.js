@@ -3,13 +3,13 @@ import Wrap from './components/wrap';
 import { StyleSheet, AlertIOS, View, Text, Button, Image, StatusBar, FlatList, Dimensions, TouchableOpacity, Alert } from 'react-native'
 import Setting from '../config/setting';
 import BaseServiceApiNet from '../utils/baseServiceApiNet';
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get('window')
 export default class Home extends PureComponent {
     constructor(props) {
         super(props)
         this.state = {
             refreshing: false, //初始化不刷新
-            loadNew:"下拉刷新",
+            loadNew:"",
             _newData:"",
             staffType:'0'
         }
@@ -45,7 +45,7 @@ export default class Home extends PureComponent {
             },
           ])
     }  
-
+   
     componentDidMount() {
         this.props.navigation.setParams({navigatePress:this.LogoffButton,navigation:this.props.navigation})
         const{navigate} = this.props.navigation; 
@@ -60,7 +60,7 @@ export default class Home extends PureComponent {
                         data: response.success,
                         refreshing:false
                     }));
-                }, 3000)
+                }, 2000)
               }else{
                 this.setState({
                     refreshing:false
@@ -109,7 +109,6 @@ export default class Home extends PureComponent {
             <View style={styles.container}>
                 <StatusBar barStyle="light-content" />
                 <FlatList
-                    style={{ width: width }}
                     ref="_flatlist"
                     data={this.state.data}
                     extraData={this.state}

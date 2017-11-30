@@ -4,6 +4,7 @@ import RadioModal from 'react-native-radio-master';
 import Setting from '../config/setting';
 import BaseServiceApiNet from '../utils/baseServiceApiNet';
 import CheckBox from 'react-native-check-box';
+import LoadingView from '../utils/loadingView';
 
 const { width } = Dimensions.get('window')
 const defaultMaxImageWidth = width - 30 - 20
@@ -22,8 +23,10 @@ export default class Details extends PureComponent {
 				isLoading:false,
 				subDescription:'',
 				sendMsg:'',
-				isChecked:false
-		}
+				isChecked:false,
+				showLoading:false
+		},
+		_that = this;
   }
 
   static navigationOptions = ({ navigation }) => {
@@ -80,9 +83,13 @@ export default class Details extends PureComponent {
 	 Array.prototype.remDub = Array.prototype.remDub || function () {
 		return [...new Set(this)];
 		};
+
 		if(Object.is(0,arrayObj.remDub().length)){
 			return	Alert.alert("","请勾选选项进行投票",[{text:"重新选择"}]); 
 		}
+		_that.setState({
+			showLoading:true
+		});
     try {
 			var formData = {
 				actionId : "VOTE",
@@ -91,23 +98,27 @@ export default class Details extends PureComponent {
       BaseServiceApiNet.sentPublicVote(this.topic_id,formData)
       .then((response) => {
         if(response.hasOwnProperty("success")){
-					setTimeout(() => {
+					setTimeout(() => {	
 					Alert.alert('', '投票成功', [
             {
               text: '点击返回',
               onPress: function() {
-                navigate("Home",{staffType:"0"})
+								navigate("Home",{staffType:"0"})
               }
             },
-          ])},1000)
+					])},0)
         }else{
 					setTimeout(() => {
 						Alert.alert("",response.error,[{text:"投票失败"}]); 
-				}, 1000)
-        }
+				}, 0)
+					
+				}
+				_that.setState((state) => ({
+					showLoading:false
+				}));	
       })
   } catch(e) {
-    alert(e);
+		alert(e);
     }
 	}
 	//check box start
@@ -208,6 +219,7 @@ renderCheckBox = (item) => {
 								{Object.is('',this.state.datas)?null:this.renderViews()}
 							</View>
 						 }
+						 <LoadingView showLoading={ this.state.showLoading } />
 				</View>
     );
 	}

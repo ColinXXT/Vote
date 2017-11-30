@@ -1,15 +1,18 @@
 import {
   AppRegistry,
   AsyncStorage,
-  NetInfo,
   Alert
 } from 'react-native';
 import errorMapping from '../config/errorMapping';
-const baseUserURL = "http://payton.wojiushiwo.cn/user";
-const baseVoteURL = "http://payton.wojiushiwo.cn/vote";
+const baseUserURL = "http://ai-gogo.s1.natapp.cc/user";
+const baseVoteURL = "http://ai-gogo.s1.natapp.cc/vote";
 const _token = "";//"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJvcGVuSWQiOiI0ZGI1Y2ExNS0xZWM4LTQ1ZGEtYjhjMi0wYTY4NGM5NzI1NjciLCJzdGFmZklkIjoidXNlciIsImlhdCI6MTUwOTUyNDAwNn0.7jxFXDqY0wCXgvrLREn928AIQgqrmEG0G_HadbZVq1s";
+
 function checkResponsStatus(response){
   console.info(response)
+  // if(Object.is(404,response.status) || Object.is(502,response.status)){
+  //   return {'error':errorMapping.getMsgAsRepsCode(response.status)}
+  // }
   if(response.hasOwnProperty('errorCode')){
     return {'error':errorMapping.getMsgAsRepsCode(response.errorCode)}
   }else if(response.hasOwnProperty('errorMsg')){
@@ -22,13 +25,16 @@ function checkResponsStatus(response){
         console.info('存储成功');
       }
     })
+    _token = getToken();
     return {'success':response};
+  
   }else{
     return {'success':response};
   }
 }
 function getToken(){
   AsyncStorage.getItem("_token", function (error, result) {
+    console.info(result)
     if (!error) {
       _token = "Bearer "+result;
     }
@@ -53,7 +59,7 @@ export default {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization':getToken()
+        //'Authorization':getToken()
       },
      body: JSON.stringify(formData)
     });
@@ -72,7 +78,6 @@ export default {
   },
   getVoteList() {
     var apiPort = "votes";
-    console.info(getToken())
     return fetchAction(`${baseVoteURL}/${apiPort}`, {
       method: 'GET',
       headers: {

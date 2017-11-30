@@ -1,18 +1,18 @@
 import React, { PureComponent } from 'react';
-import { StyleSheet, ScrollView, View, Text, ActivityIndicator, TextInput, Button, Image, StatusBar, FlatList, Dimensions, TouchableOpacity,Alert } from 'react-native'
+import { AsyncStorage, StyleSheet ,ScrollView, View, Text, ActivityIndicator, TextInput, Button, Image, StatusBar, FlatList, Dimensions, TouchableOpacity,Alert } from 'react-native'
 import BaseServiceApiNet from '../utils/baseServiceApiNet';
 import Setting from '../config/setting';
 var forge = require('node-forge');
+import LoadingView from '../utils/loadingView';
 export default class Login extends PureComponent {
   constructor(props) {
     super(props)
     this.state = { 
       text: '' ,
       isLoading:false, 
-      responseMessage:''
+      showLoading:false,
     }
   }
-
   static navigationOptions = ({ navigation }) => {
     const { state, setParams, navigate } = navigation;
     return {
@@ -23,50 +23,56 @@ export default class Login extends PureComponent {
   };
   _onLogin = (userName,password) => {
     const { navigate } = this.props.navigation;
+    that = this;
     if(false){
-      navigate('Home',{staffType:'1'});
+      navigate('Home',{staffType:'0'});
       return;
     }
-    if(this.state.isLoading==true){
+    if(this.state.showLoading==true){
       return;
     }
     if((!!userName)&& (!!password)){
         var md = forge.md.md5.create();
         md.update(password);
         this.setState({
-          isLoading:true
+          isLoading:true,
+          showLoading:true
         });
     try{
         BaseServiceApiNet.getUserInfo({
           staffId : userName,
           password : md.digest().toHex().toUpperCase()
         }).then((response) => {
-           this.setState({
-             isLoading:false
-           });
-           if(response.hasOwnProperty('success')){
+          console.info(response)
+           setTimeout(() => {
+            if(response.hasOwnProperty('success')){
+              console.info(response.success._token)
+              // that._saveToken(response.success._token);
               this.setState({
-                responseMessage:{
-                  _token:response.success._token,
-                  staffType:response.success.staffType,
-                  openId:response.success.openId
-                }    
-              })
+                isLoading:false,
+                showLoading:false
+              });  
               navigate('Home',{staffType:response.success.staffType});
             }else{
-              Alert.alert("",response.error,[{text:"信息加载失败，重新登陆"}]);
-            }
+              Alert.alert("",response.error);
+            }}, 500)
+            this.setState({
+              isLoading:false,
+              showLoading:false
+            });   
           })
         }catch(e){
           console.info(e);
         }
     }else{
       this.setState({
-        isLoading:false
+        isLoading:false,
+        showLoading:false
       });
       Alert.alert("错误提示","帐号或者密码不能为空",[{text:"重新输入"}]);              
     }
   }
+   
   render() {
     const { loading, navigation } = this.props
     return (
@@ -74,7 +80,7 @@ export default class Login extends PureComponent {
       <View style={styles.container}>
         <StatusBar barStyle="light-content" />
         <View style={styles.logoView}>
-          <Image style={styles.logo} source={require('../assets/images/logo.png')} resizeMode='contain' />
+          <Image style={styles.logo} source={require('../assets/images/logon1.png')} resizeMode='contain' />
         </View>
         <Text style={styles.label}>用户名</Text> 
         <View style={styles.inputView}>         
@@ -97,10 +103,11 @@ export default class Login extends PureComponent {
             onChangeText={(password) => { this.setState({ password }) }}
           />
         </View>
-        <ActivityIndicator  animating={this.state.isLoading}  />
+        {/* <ActivityIndicator  animating={this.state.isLoading}  /> */}
         <TouchableOpacity animating={this.state.isLoading} style={styles.loginBtn} onPress={() => { this._onLogin(this.state.username,this.state.password) }}>
           <Text style={styles.login}>登录</Text>
         </TouchableOpacity>
+        <LoadingView showLoading={ this.state.showLoading } />
       </View>
       </ScrollView>
     );
@@ -132,7 +139,8 @@ const styles = StyleSheet.create({
   },
 
   logo: {
-    width: 200,
+    width: 340,
+    height:190
   },
 
   inputView: {
@@ -145,13 +153,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#F8F8F8',
   },
-
   input: {
     fontSize: 14,
     paddingLeft: 15,
     paddingRight: 15,
   },
-
   loginBtn: {
     padding: 15,
     margin: 15,

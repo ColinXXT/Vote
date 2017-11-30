@@ -3,7 +3,8 @@ import React from 'react'
 import { StyleSheet, Alert,View, Image, Text, TouchableHighlight } from 'react-native'
 function Wrap({ item, navigate , staffType}) {
   return (
-    <TouchableHighlight onPress={() => {{staffType=='1'?Alert.alert("",'SmartOA暂时不能对您提供投票的服务，查看更多投票信息请访问Admin主页'):navigate('Details', { topic_id: item._id, title:item.title })} }}>
+    <View style={styles.container}>
+    <TouchableHighlight  onPress={() => {{staffType=='1'?Alert.alert("",'SmartOA暂时不能对您提供投票的服务，查看更多投票信息请访问Admin主页'):navigate('Details', { topic_id: item._id, title:item.title })} }}>
       <View style={styles.list}>
         <View style={styles.header}>
           <Text numberOfLines={1} style={styles.h3}>{item.title}</Text>
@@ -26,10 +27,14 @@ function Wrap({ item, navigate , staffType}) {
         </View>
       </View >
     </TouchableHighlight>
+    </View>
   )
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+},
   list: {
     paddingTop: 10,
     paddingLeft: 15,
@@ -100,14 +105,6 @@ const styles = StyleSheet.create({
   content: {
     paddingTop: 10,
     flexDirection: 'row'
-  },
-
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    marginRight: 10,
-    backgroundColor: '#e7e7e7',
   },
 
   info: {

@@ -7,6 +7,7 @@ let errorMapping = {
             break;
             case 'U_0100_003': return '用户名不存在,请联系管理员';
             break;
+            default : return '服务器崩溃,请检查网络连接或者稍后在试('+repsCode+')'
         }
     }
 }
